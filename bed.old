@@ -4,7 +4,6 @@ bed - Browser-based Editor for local plain text and .link files.
 Zero dependencies. Pure Python standard library.
 """
 
-import base64
 import http.server
 import json
 import os
@@ -18,49 +17,12 @@ PORT = 8765
 last_ping = time.time()
 running = True
 
-# --- Embedded macOS App Icon (.icns) ---
-# Dark-slate rounded app icon with embedded edit glyph
-ICON_BASE64 = (
-    "AAACAAEAICAAAAAAAACoCAAAFgAAACgAAAAgAAAAQAAAAAEACAAAAAAAAAQAAAAAAAAAAAAAAAEA"
-    "AAABAAAAAAAAAAAAAAAAMTIz/wAAAAAzMzP/AAAAZpmZ/wAAAJnMzP8AAAAzMzP/MzMz/2aZmf8z"
-    "MzP/zMzM/zMzM/9mmZn/MzMz/2aZmf9mmZn/zMzM/2aZmf/MzMz/MzMz/8zMzP9mmZn/zMzM/8zM"
-    "zP//////////////////////////////////////////////////////////////////////////"
-    "////////////////////////////////////////////////////////////////////////////"
-    "////////////////////////////////////////////////////////////////////////////"
-    "////////////////////////////////////////////////////////////////////////////"
-    "////////////////////////////////////////////////////////////////////////////"
-    "////////////////////////////////////////////////////////////////////////////"
-    "////////////////////////////////////////////////////////////////////////////"
-    "////////////////////////////////////////////////////////////////////////////"
-    "////////////////////////////////////////////////////////////////////////////"
-    "////////////////////////////////////////////////////////////////////////////"
-    "////////////////////////////////////////////////////////////////////////////"
-    "////////////////////////////////////////////////////////////////////////////"
-    "////////////////////////////////////////////////////////////////////////////"
-    "////////////////////////////////////////////////////////////////////////////"
-    "///////////////////////////////////////////////////////////////////////8AAAA"
-    "AAAAAAAIiIiIiIiIiIiIiIiIiIiIgACIu7u7u7u7u7u7u7u7u7u7uACIu7u7u7u7u7u7u7u7u7"
-    "u7uACIu7u7u7u7u7u7u7u7u7u7uACIu7u7u7u7u7u7u7u7u7u7uACIu7u7u7u7u7u7u7u7u7u7"
-    "uACIu7u7u7u7u7u7u7u7u7u7uACIu7u7u7u7u7u7u7u7u7u7uACIu7u7u7u7u7u7u7u7u7u7uA"
-    "CIu7u7u7u7u7u7u7u7u7u7uACIu7u7u7u7u7u7u7u7u7u7uACIu7u7u7u7u7u7u7u7u7u7uACI"
-    "u7u7u7u7u7u7u7u7u7u7uACIu7u7u7u7u7u7u7u7u7u7uACIu7u7u7u7u7u7u7u7u7u7uACIu7"
-    "u7u7u7u7u7u7u7u7u7uACIu7u7u7u7u7u7u7u7u7u7uACIu7u7u7u7u7u7u7u7u7u7uACIu7u7"
-    "u7u7u7u7u7u7u7u7uACIu7u7u7u7u7u7u7u7u7u7uACIu7u7u7u7u7u7u7u7u7u7uACIu7u7u7"
-    "u7u7u7u7u7u7u7uACIu7u7u7u7u7u7u7u7u7u7uACIu7u7u7u7u7u7u7u7u7u7uACIu7u7u7u7"
-    "u7u7u7u7u7u7uACIu7u7u7u7u7u7u7u7u7u7uACIu7u7u7u7u7u7u7u7u7u7uACIu7u7u7u7u7"
-    "u7u7u7u7u7uACIu7u7u7u7u7u7u7u7u7u7uAAIiIiIiIiIiIiIiIiIiIiIgAAAAAAAAAAAgAAAA"
-    "EAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-    "AAAAAAAAAAAAAAAAAAAAAAAAAA=="
-)
-
 # --- macOS Native Installation Routine ---
 
 def install_macos():
-    """Compiles Bed.app, writes icon, and registers file associations."""
+    """Compiles Bed.app and registers file associations with macOS LaunchServices."""
     script_path = os.path.abspath(os.path.realpath(__file__))
     app_dir = os.path.expanduser("~/Applications/Bed.app")
-    res_dir = os.path.join(app_dir, "Contents/Resources")
     lsregister = "/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister"
     
     print(f"Installing Bed.app for: {script_path}")
@@ -70,14 +32,9 @@ def install_macos():
         subprocess.run([lsregister, "-u", app_dir], stderr=subprocess.DEVNULL)
         
     os.makedirs(os.path.join(app_dir, "Contents/MacOS"), exist_ok=True)
-    os.makedirs(res_dir, exist_ok=True)
+    os.makedirs(os.path.join(app_dir, "Contents/Resources"), exist_ok=True)
 
-    # 2. Write embedded application icon
-    icon_path = os.path.join(res_dir, "AppIcon.icns")
-    with open(icon_path, "wb") as f:
-        f.write(base64.b64decode(ICON_BASE64))
-
-    # 3. Native Cocoa launcher source
+    # 2. Native Cocoa launcher source
     launcher_src = f"""#import <Cocoa/Cocoa.h>
 
 #define TARGET_SCRIPT_PATH @"{script_path}"
@@ -92,7 +49,7 @@ def install_macos():
     self.fileHandled = YES;
     NSTask *task = [[NSTask alloc] init];
     task.launchPath = @"/usr/bin/python3";
-    task.arguments = path ? @[TARGET_SCRIPT_PATH, path] : @[TARGET_SCRIPT_PATH];
+    task.arguments = @[TARGET_SCRIPT_PATH, path];
     task.standardOutput = [NSFileHandle fileHandleWithNullDevice];
     task.standardError = [NSFileHandle fileHandleWithNullDevice];
     [task launchAndReturnError:nil];
@@ -124,9 +81,13 @@ def install_macos():
 }}
 
 - (void)applicationDidFinishLaunching:(NSNotification *)notification {{
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.8 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{{
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{{
         if (!self.fileHandled) {{
-            [self openScriptWithFile:nil];
+            NSTask *task = [[NSTask alloc] init];
+            task.launchPath = @"/usr/bin/python3";
+            task.arguments = @[TARGET_SCRIPT_PATH];
+            [task launchAndReturnError:nil];
+            [NSApp terminate:nil];
         }}
     }});
 }}
@@ -159,7 +120,7 @@ int main(int argc, const char * argv[]) {{
         print("Error: Clang compilation failed. Ensure Xcode Command Line Tools are installed.")
         sys.exit(1)
 
-    # 4. Write Info.plist with AppIcon and Type Declarations
+    # 3. Write Info.plist with Document Types and Exported UTIs for .link
     plist_path = os.path.join(app_dir, "Contents/Info.plist")
     plist_content = """<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -169,8 +130,6 @@ int main(int argc, const char * argv[]) {{
     <string>en</string>
     <key>CFBundleExecutable</key>
     <string>Bed</string>
-    <key>CFBundleIconFile</key>
-    <string>AppIcon</string>
     <key>CFBundleIdentifier</key>
     <string>com.local.bed</string>
     <key>CFBundleInfoDictionaryVersion</key>
@@ -236,47 +195,42 @@ int main(int argc, const char * argv[]) {{
     with open(plist_path, "w") as f:
         f.write(plist_content)
 
-    # 5. Ad-hoc sign bundle
+    # 4. Ad-hoc sign bundle
     print("Signing Bed.app bundle...")
     subprocess.run(["codesign", "--force", "--deep", "--sign", "-", app_dir], check=True)
 
-    # 6. Register with LaunchServices
+    # 5. Register with LaunchServices
     if os.path.exists(lsregister):
         print("Registering with macOS LaunchServices...")
         subprocess.run([lsregister, "-f", "-r", app_dir], check=True)
 
-    subprocess.run(["killall", "Finder", "Dock"], stderr=subprocess.DEVNULL)
-    print("\n✓ Installation Complete! Bed.app is registered in ~/Applications with an icon.")
-    print("Drag ~/Applications/Bed.app into your Dock for single-click scratchpads.")
+    subprocess.run(["killall", "Finder"], stderr=subprocess.DEVNULL)
+    print("\n✓ Installation Complete! Bed.app is registered in ~/Applications.")
+    print("To set as default: Right-click any .link or .txt file -> Get Info -> Open With: Bed.app -> Change All...")
     sys.exit(0)
 
 
-# --- CLI Routing & Default Scratchpad ---
+# --- CLI Routing ---
 
-if len(sys.argv) < 2 or sys.argv[1].startswith("-"):
+if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help"):
     if len(sys.argv) >= 2 and sys.argv[1] == "--install":
         if sys.platform == "darwin":
             install_macos()
         else:
-            print("Installation helper is tailored for macOS.")
+            print("Installation helper is currently tailored for macOS. On Linux/Windows, bind 'bed <file>' to your file manager.")
             sys.exit(0)
-    elif len(sys.argv) >= 2 and sys.argv[1] in ("-h", "--help"):
-        print("Usage: bed [path-to-file]")
-        print("       bed --install    (Registers Bed.app in ~/Applications on macOS)")
+    print("Usage: bed <path-to-file>")
+    print("       bed --install    (Registers Bed.app in ~/Applications on macOS)")
+    sys.exit(1)
+
+if sys.argv[1] == "--install":
+    if sys.platform == "darwin":
+        install_macos()
+    else:
+        print("Installation helper is currently tailored for macOS.")
         sys.exit(0)
 
-    # Launched from Dock or terminal with no file argument: create/open untitled.link
-    desktop = os.path.expanduser("~/Desktop")
-    base_name = "untitled"
-    ext = ".link"
-    candidate = os.path.join(desktop, f"{base_name}{ext}")
-    counter = 1
-    while os.path.exists(candidate) and os.path.getsize(candidate) > 0:
-        candidate = os.path.join(desktop, f"{base_name}-{counter}{ext}")
-        counter += 1
-    TARGET_FILE = os.path.abspath(candidate)
-else:
-    TARGET_FILE = os.path.abspath(sys.argv[1])
+TARGET_FILE = os.path.abspath(sys.argv[1])
 
 # --- Web Application Frontend ---
 
