@@ -1,28 +1,31 @@
 # Bed (Browser Editor)
 
-> A zero-bloat, lightning-fast text and bookmark editor running inside Google Chrome.
+> A zero-bloat, instant-launch text and bookmark editor running inside your default web browser.
+> 
+> 
+> **Platform Support:** macOS Only (Apple Silicon & Intel)
 
-**Bed** turns your browser into a local desktop editor. Double-click any `.link`, `.txt`, or `.md` file to immediately open a minimalist, dark-mode editing session. Modify content, rename extensions on the fly, jump out to live URLs, and hit `Cmd+S` to write in-place directly to disk.
+**Bed** turns your web browser into an ultra-fast local scratchpad and desktop bookmark manager. Double-click any `.link`, `.txt`, `.md`, or `.ini` file in Finder to immediately launch a dark-mode editing session. Modify content, rename files or suffixes on the fly, jump directly to active URLs, and hit `Cmd+S` to commit changes in-place to disk.
 
-When you close the browser tab, the background server terminates automatically.
+When you close the browser tab, the lightweight background process terminates automatically.
 
 ---
 
 ## ⚡ The Desktop Bookmark Workflow
 
-Modern browsers make it easy to drag links (from Twitter/X, GitHub, research papers, or articles) directly onto your desktop. `Bed` makes those links immediately editable, annotatable, and launchable:
+Modern browsers make it easy to drag links (from Twitter/X, GitHub, research papers, or articles) directly onto your desktop. `Bed` turns those raw links into editable, annotatable, and launchable workspace cards:
 
 ```text
 [ Browser / Twitter / Web ]
            │
            │  (Drag link to Desktop)
            ▼
-    [ myArticle.link ] ──( Double Click )──▶ [ Chrome Bed Editor ]
+    [ myArticle.link ] ──( Double Click )──▶ [ Chrome / Safari Bed Editor ]
                                                    │
                ┌───────────────────────────────────┴───────────────────────────────────┐
                ▼                                                                       ▼
-   [ Edit Notes & URLs ]                                                   [ Instant Navigation ]
-   Type summary, context, tags.                                            Press Cmd + Enter anywhere 
+   [ Edit Notes & Annotations ]                                            [ Instant Navigation ]
+   Add context, summaries, or tags.                                        Press Cmd + Enter anywhere 
    Press Cmd + S to save in-place.                                         on a line to open that URL in a tab.
 
 ```
@@ -31,7 +34,7 @@ Modern browsers make it easy to drag links (from Twitter/X, GitHub, research pap
 
 ## 📝 The `.link` Format
 
-A `.link` file is a plain-text document structured with a Windows-compatible `[InternetShortcut]` header, followed by user notes, markdown, or task lists:
+A `.link` file is a plain-text document formatted with a standard Windows-compatible `[InternetShortcut]` header, followed by Markdown notes, task items, or research logs:
 
 ```ini
 [InternetShortcut]
@@ -44,18 +47,30 @@ URL=https://x.com/karpathy/status/1754888066270724397
 
 ```
 
-`Bed` parses the `URL=` key or any bare URL on the current line for instant browser tab opening.
+`Bed` inspects the active cursor line and instantly launches either the `URL=` target or any bare web link found on that line.
 
 ---
 
 ## 🚀 Key Features
 
-* **⚡ Instant Native Launch:** Double-click any `.link`, `.txt`, `.md`, or `.ini` file in Finder.
-* **💾 In-Place Disk Writes:** `Cmd+S` (or `Ctrl+S`) commits directly to your file system without file picker dialogs.
-* **🌐 URL Line Navigation:** Press `Cmd+Enter` (or `Ctrl+Enter`) on any line containing a URL or domain to open it in a new tab.
-* **🏷️ Dynamic Suffix & Rename:** Edit the filename/extension in the header bar and press `Enter` to rename on disk automatically.
-* **🪶 Zero Dependencies:** Pure Python 3 standard library. No Electron, no Node, no NPM packages, zero bloat.
-* **🔌 Self-Terminating:** Automatically monitors browser presence via WebSocket/Beacon heartbeats and exits cleanly when the tab closes.
+* **⚡ Instant Native Launch:** Double-click `.link`, `.txt`, `.md`, or `.ini` files directly in Finder.
+
+
+* **💾 In-Place Disk Writes:** `Cmd+S` saves directly back to the source file with zero file picker prompts.
+
+
+* **🌐 URL Line Navigation:** Press `Cmd+Enter` on any line containing a URL or domain to open it in a new browser tab.
+
+
+* **🏷️ Dynamic Suffix & Rename:** Edit the filename or extension in the top bar and press `Enter` to rename the file on disk instantly.
+
+
+* **🪶 Zero Dependencies:** Built strictly on the Python 3 standard library and a native Objective-C launcher. No Electron, Node.js, or NPM packages.
+
+
+* **🔌 Clean Self-Termination:** Background listener tracks browser heartbeats and exits memory as soon as the tab closes.
+
+
 
 ---
 
@@ -63,42 +78,58 @@ URL=https://x.com/karpathy/status/1754888066270724397
 
 | Shortcut | Action |
 | --- | --- |
-| **`Cmd + S`** / **`Ctrl + S`** | Save changes in-place directly to disk |
-| **`Cmd + Enter`** / **`Ctrl + Enter`** | Open the URL found on the active line in a new tab |
-| **`Tab`** | Insert 4-space indentation |
-| **`Enter`** *(in filename box)* | Rename file / change extension on disk |
+| **`Cmd + S`** | Save changes in-place directly to disk
+
+ |
+| **`Cmd + Enter`** | Open the URL found on the active line in a new tab
+
+ |
+| **`Tab`** | Insert clean 4-space indentation
+
+ |
+| **`Enter`** *(in filename header)* | Commit file rename / change extension on disk
+
+ |
 
 ---
 
-## 📦 Installation (macOS)
+## 📦 Installation (macOS Only)
 
-### 1. Clone & Install
+### 1. Clone & Run Installer
 
 ```bash
-git clone https://github.com/your-username/bed.git
+git clone https://github.com/lvwarren/bed.git
 cd bed
 ./install.sh
 
 ```
 
-*`./install.sh` compiles a native Cocoa bundle (`Bed.app`) in `~/Applications` and registers all file handlers with macOS LaunchServices.*
+`./install.sh` builds the native Cocoa bundle (`Bed.app`) in `~/Applications`, applies an ad-hoc signature, and registers document types with macOS LaunchServices.
 
 ---
 
-## 🔗 Set Default Association (One-Time)
+## 🔗 Set Default File Association (One-Time Setup)
 
-1. Right-click any `.link` (or `.txt`) file on your Desktop and select **Get Info** (`Cmd + I`).
-2. Under **Open with:**, select **Bed**.
+To configure macOS Finder to open all `.link` files in `Bed` on double-click:
+
+1. Right-click any `.link` (or `.txt`) file on your Desktop or in Finder and choose **Get Info** (`Cmd + I`).
+
+
+2. Expand the **Open with:** section and choose **Bed**.
+
+
 3. Click **Change All...** and confirm.
+
+
 
 ---
 
 ## 🖥️ Command Line Usage
 
-You can also launch `bed` directly from your terminal:
+`Bed` can also be invoked directly from the terminal:
 
 ```bash
-bed ~/Desktop/research.link
+bed ~/Desktop/worldMonitor.link
 bed notes.txt
 bed config.ini
 
