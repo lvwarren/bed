@@ -120,7 +120,7 @@ int main(int argc, const char * argv[]) {{
         print("Error: Clang compilation failed. Ensure Xcode Command Line Tools are installed.")
         sys.exit(1)
 
-    # 3. Write Info.plist
+    # 3. Write Info.plist with Document Types and Exported UTIs for .link
     plist_path = os.path.join(app_dir, "Contents/Info.plist")
     plist_content = """<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -146,7 +146,7 @@ int main(int argc, const char * argv[]) {{
     <array>
         <dict>
             <key>CFBundleTypeName</key>
-            <string>Plain Text and Link</string>
+            <string>Link Document</string>
             <key>CFBundleTypeRole</key>
             <string>Editor</string>
             <key>LSHandlerRank</key>
@@ -161,9 +161,32 @@ int main(int argc, const char * argv[]) {{
             </array>
             <key>LSItemContentTypes</key>
             <array>
+                <string>com.local.bed.link</string>
                 <string>public.plain-text</string>
                 <string>public.data</string>
             </array>
+        </dict>
+    </array>
+    <key>UTExportedTypeDeclarations</key>
+    <array>
+        <dict>
+            <key>UTTypeIdentifier</key>
+            <string>com.local.bed.link</string>
+            <key>UTTypeDescription</key>
+            <string>Link Document</string>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>public.plain-text</string>
+                <string>public.data</string>
+            </array>
+            <key>UTTypeTagSpecification</key>
+            <dict>
+                <key>public.filename-extension</key>
+                <array>
+                    <string>link</string>
+                    <string>uri</string>
+                </array>
+            </dict>
         </dict>
     </array>
 </dict>
