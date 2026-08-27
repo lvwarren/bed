@@ -4,6 +4,8 @@
 > 
 > 
 > **Platform Support:** macOS Only (Apple Silicon & Intel)
+> 
+> 
 
 **Bed** turns your web browser into an ultra-fast local scratchpad and desktop bookmark manager. Double-click any `.link`, `.txt`, `.md`, or `.ini` file in Finder to immediately launch a dark-mode editing session. Modify content, rename files or suffixes on the fly, jump directly to active URLs, and hit `Cmd+S` to commit changes in-place to disk.
 
@@ -93,9 +95,9 @@ URL=https://x.com/karpathy/status/1754888066270724397
 
 ---
 
-## 📦 Installation (macOS Only)
+## 📦 Installation & Updating (macOS Only)
 
-### 1. Clone & Run Installer
+### Initial Install
 
 ```bash
 git clone https://github.com/lvwarren/bed.git
@@ -104,7 +106,19 @@ cd bed
 
 ```
 
-`./install.sh` builds the native Cocoa bundle (`Bed.app`) in `~/Applications`, applies an ad-hoc signature, and registers document types with macOS LaunchServices.
+`./install.sh` compiles the native Cocoa bundle (`Bed.app`) in `~/Applications`, ad-hoc signs it, and registers document UTIs with macOS LaunchServices.
+
+### Updating an Existing Installation
+
+Whenever you pull the latest updates from the repository, re-register the native application bundle by running:
+
+```bash
+git pull
+bed --install
+
+```
+
+*(or run `./install.sh` from the repo root).*
 
 ---
 
@@ -132,6 +146,7 @@ To configure macOS Finder to open all `.link` files in `Bed` on double-click:
 bed ~/Desktop/worldMonitor.link
 bed notes.txt
 bed config.ini
+bed --install
 
 ```
 
